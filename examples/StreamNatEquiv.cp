@@ -1,3 +1,111 @@
+type Nat = lfp X . Unit + X ;
+type StrN = gfp Y . Nat * Y ;
+
+0 : Nat
+  = in (inl <>) ;
+
+pre-suc : Nat -> Unit + Nat
+    = \n. inr n ;
+
+suc : Nat -> Nat
+    = \n. in (inr n) ;
+
+1 : Nat
+  = suc 0 ;
+
+plus-aux : Unit + (Nat -> Nat) -> (Nat -> Nat)
+         = \x. \m. {inl _ -> m ; inr f -> suc (f m)} x ;
+
+plus : Nat -> Nat -> Nat
+     = \n. \m. rec plus-aux n m ;
+
+hd : StrN -> Nat
+   = \s. (s.out).fst ;
+
+tl : StrN -> StrN
+   = \s. (s.out).snd ;
+
+inj : Nat -> StrN
+    = \n. corec (\x. <n, x>) <> ;
+
+splus-aux : StrN * StrN -> Nat * (StrN * StrN)
+          = \x. <plus (hd (x.fst)) (hd (x.snd)), <tl (x.fst), tl (x.snd)>> ;
+
+splus : StrN -> StrN -> StrN
+      = \s. \t. corec splus-aux <s, t> ;
+
+thm andI [P,Q] : P -> Q -> P & Q =
+  \p. \q. <p & q>
+;
+
+thm prod-coind : forall x:Nat*StrN. forall y:Nat*StrN.
+                 (x.fst ~ y.fst) & (x.snd ~ y.snd) -> x ~ y =
+  \\x. \\y. \p. <p.&fst, p.&snd>
+;
+
+thm later-distr-conj [P,Q] : #P & #Q -> #(P & Q) =
+  \lplq. (nec (inst andI [P,Q]))
+         <*> (lplq.&fst)
+         <*> (lplq.&snd)
+;
+
+thm later-dist-forall-Nat [P(x : Nat)]
+  : #(forall x:Nat.P(x)) -> forall y:Nat. #P(y)
+  = \p. \\y. (nec (\q. q @ y)) <*> p
+;
+
+thm later-dist-forall-StrN [P(x : StrN)]
+  : #(forall x:StrN.P(x)) -> forall y:StrN. #P(y)
+  = \p. \\y. (nec (\q. q @ y)) <*> p
+;
+
+thm later-distr-pair : forall x:Nat*StrN. forall y:Nat*StrN.
+                       #(x.fst ~ y.fst) & #(x.snd ~ y.snd) -> #(x ~ y) =
+  \\x. \\y. \p. (nec ((inst prod-coind) @ x @ y))
+                <*> ((inst later-distr-conj [x.fst ~ y.fst, x.snd ~ y.snd]) p)
+;
+
+thm later-trans-Nat : forall x:Nat. forall y:Nat. forall z:Nat.
+                  #(x ~ y) -> #(y ~ z) -> #(x ~ z)
+  = \\x. \\y. \\z. \p. \q. (nec (\r. \s. trans r s)) <*> p <*> q
+;
+
+thm later-fst : forall x:Nat*StrN. forall y:Nat*StrN. #(x ~ y) -> #(x.fst ~ y.fst)
+    = \\x. \\y. \p. (nec (\q. q.fst)) <*> p
+;
+
+thm cong-hd : forall s:StrN. forall t:StrN.
+              s ~ t -> #(Eq hd s ~ hd t)
+    = \\s. \\t. \p.
+      ((inst later-trans-Nat) @ (hd s) @ (t.out.fst) @ (hd t))
+             (((inst later-trans-Nat) @ (hd s) @ (s.out.fst) @ (t.out.fst))
+                     (nec (refl (hd s) (s.out.fst)))
+                     (((inst later-fst) @ (s.out) @ (t.out)) (p.out)))
+             (nec (refl (t.out.fst) (hd t)))
+;
+
+thm conv-hd : forall s:StrN. forall t:StrN.
+              (hd s ~ hd t) -> (s.out.fst ~ t.out.fst) =
+  \\s. \\t. \p. trans (trans (refl (s.out.fst) (hd s)) p)
+                      (refl (hd t) (t.out.fst))
+;
+
+thm conv-tl : forall s:StrN. forall t:StrN.
+              (tl s ~ tl t) -> (s.out.snd ~ t.out.snd) =
+  \\s. \\t. \p. trans (trans (refl (s.out.snd) (tl s)) p)
+                      (refl (tl t) (t.out.snd))
+;
+
+thm str-coind : forall s:StrN. forall t:StrN.
+                #(hd s ~ hd t) -> #(tl s ~ tl t) -> s ~ t =
+  \\s. \\t. \p. \q. coind (((inst later-distr-pair) @ (s.out) @ (t.out))
+                                  < (nec ((inst conv-hd) @ s @ t)) <*> p
+                                  & (nec ((inst conv-tl) @ s @ t)) <*> q>)
+;
+
+-- Proved in StreamPlusComm.cp
+thm splus-comm : forall s:StrN. forall t:StrN. splus s t ~ splus t s = ?? ;
+
 nat1-coalg : Nat -> Nat * Nat
            = \n. <n , suc n> ;
 
