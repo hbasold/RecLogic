@@ -1,0 +1,141 @@
+-- position token Identifier ((letter | '_') (letter | digit | '_')*) ;
+position token Identifier ((letter | digit | '_' | '-')+) ;
+-- position token Projection ('.' (letter)+) ;
+token Lambda ('\\' | {"lambda"}) ;
+comment "--" ;
+
+entrypoints Program ;
+
+TypeVar. TypeVar ::= Identifier ;
+
+ArrowT. Type ::= Type1 "->" Type ;
+PlusT. Type1 ::= Type1 "+" Type2 ;
+TimesT. Type2 ::= Type2 "*" Type3 ;
+LfpT. Type ::= "lfp" Identifier "." Type ;
+GfpT. Type ::= "gfp" Identifier "." Type ;
+OneT. Type3 ::= "Unit" ;
+VarT. Type3 ::= TypeVar ;
+
+coercions Type 3 ;
+
+------
+
+Var. Term3 ::= Identifier ;
+Unit. Term3 ::= "<>" ;
+Inl. Term ::= "inl" Term1 ;
+Inr. Term ::= "inr" Term1 ;
+Pair. Term3 ::= "<" Term "," Term ">" ;
+Abs. Term ::= Lambda Identifier "." Term ;
+In. Term ::= "in" Term1 ;
+App. Term2 ::= Term2 Term3 ;
+Fst. Term2 ::= Term1 ".fst" ;
+Snd. Term2 ::= Term1 ".snd" ;
+Out. Term2 ::= Term1 ".out" ;
+Match. Term ::= "{" "inl" Identifier "->" Term ";" "inr" Identifier "->" Term "}" Term3 ;
+Rec. Term2 ::= "rec" Term3 Term3 ;
+Corec. Term2 ::= "corec" Term3 Term3 ;
+
+coercions Term 3 ;
+
+-- _. Term  ::= Term1 ;
+-- _. Term1  ::= Term2 ;
+-- _. Term2  ::= Term3 ;
+-- _. Term3  ::= "(" Term ")" ;
+
+-----------
+
+PropDecl. PropDecl ::= Identifier ":" Type ;
+NoPropDecls. PropDecls ::= ;
+PropDecls. PropDecls ::= "(" [PropDecl] ")" ;
+separator nonempty PropDecl "," ;
+
+PropArg. PropArg ::= Term ;
+NoPropArgs. PropArgs ::= ;
+PropArgs. PropArgs ::= "(" [PropArg] ")" ;
+separator nonempty PropArg "," ;
+
+Bottom. Formula4 ::= "F" ;
+PropVar. Formula4 ::= Identifier PropArgs ;
+Implies. Formula ::= Formula1 "->" Formula ;
+Or. Formula1 ::= Formula1 "|" Formula2 ;
+And. Formula2 ::= Formula2 "&" Formula3 ;
+Forall. Formula ::= "forall" Identifier ":" Type "." Formula ;
+Exists. Formula ::= "exists" Identifier ":" Type "." Formula ;
+EqForm. Formula3 ::= Equality ;
+Later. Formula3 ::= "#" Formula4 ;
+LfpF. Formula ::= "lfp" Identifier PropDecls "." Formula ;
+GfpF. Formula ::= "gfp" Identifier PropDecls "." Formula ;
+
+coercions Formula 4 ;
+
+Equality. Equality1 ::= Term "~" Term ;
+_. Equality ::= Equality1 ;
+_. Equality ::= "Eq" Equality1 ;
+
+-------------------------
+
+ThmArg. ThmArg ::= Formula ;
+NoArgs. ThmArgs ::= ;
+Args.   ThmArgs ::= "[" [ThmArg] "]" ;
+separator ThmArg "," ;
+
+PrHole. Proof4 ::= "??" ;
+PrVar. Proof4 ::= Identifier ;
+PrBotElim. Proof2 ::= "bot-elim" Proof1 ;
+PrThmInst. Proof ::= "inst" Identifier ThmArgs ;
+PrImplIntro. Proof ::= Lambda Identifier "." Proof ;
+PrImplElim. Proof3 ::= Proof3 Proof4 ;
+PrAndIntro. Proof4 ::= "<" Proof "&" Proof ">" ;
+PrAndElimFst. Proof2 ::= Proof1 ".&fst" ;
+PrAndElimSnd. Proof2 ::= Proof1 ".&snd" ;
+PrOrIntroLeft. Proof ::= "|inl" Proof1 ;
+PrOrIntroRight. Proof ::= "|inr" Proof1 ;
+PrOrElim. Proof ::= "|-elim" Proof4 Proof4 ;
+PrNec. Proof ::= "nec" Proof1 ;
+PrAppl. Proof2 ::= Proof2 "<*>" Proof3 ;
+PrFP. Proof ::= "fix" Identifier "." Proof ;
+PrAllIntro. Proof ::= "\\\\" Identifier "." Proof ;
+PrAllElim. Proof2 ::= Proof2 "@" Term3 ;
+PrExIntro. Proof ::= "ex" Term3 Proof1 ;
+PrExElim. Proof ::= "ex-elim" Identifier Proof4 Proof4 ;
+-- Equality proofs
+PrRefl. Proof ::= "refl" Term3 Term3 ;
+PrSym. Proof ::= "sym" Proof4 ;
+PrTrans. Proof ::= "trans" Proof4 Proof4 ;
+PrExt. Proof ::= "ext" Identifier Proof ;
+PrFunEq. Proof ::= "fun" Proof1 Term3 ;
+PrUnit. Proof ::= "unit" Term3 ;
+PrFst. Proof2 ::= Proof1 ".fst" ;
+PrSnd. Proof2 ::= Proof1 ".snd" ;
+PrPair. Proof4 ::= "<" Proof "," Proof ">" ;
+PrOut. Proof2 ::= Proof1 ".out" ;
+PrCoind. Proof ::= "coind" Proof1 ;
+PrUnitInd. Proof ::= "{" "<>" "->" Proof "}" Identifier ;
+PrInl. Proof ::= "inl" Proof1 ;
+PrInr. Proof ::= "inr" Proof1 ;
+PrSumInd. Proof ::= "{" "inl" Identifier "->" Proof ";" "inr" Identifier "->" Proof "}" Identifier ;
+PrIn. Proof ::= "in" Proof1 ;
+PrLfpInd. Proof ::= "{" "in" Identifier "->" Proof "}" Identifier ;
+-- PrLfpInd. Proof ::= "ind" Identifier "." Proof ;
+
+coercions Proof 4 ;
+
+------------------------
+
+ThmDecl. ThmDecl ::= Identifier PropDecls ;
+
+NoDeclArgs. ThmDecls ::= ;
+DeclArgs. ThmDecls ::= "[" [ThmDecl] "]" ;
+separator ThmDecl "," ;
+
+TypeDef. Entry ::= "type" Identifier "=" Type ;
+-- Decl. Entry ::= Identifier ":" Type ;
+Def. Entry ::= Identifier ":" Type "=" Term ;
+-- Theorem. Entry ::= "thm" Identifier ":" Proof ;
+Theorem. Entry ::= "thm" Identifier ThmDecls ":" Formula "=" Proof ;
+FormDef. Entry ::= "def" Identifier ThmDecls "=" Formula ;
+-- ProjDecl. Entry ::= Projection ":" Type ;
+-- ProjDef. Entry ::= Identifier Projection "=" Term ;
+
+Program. Program ::= [Entry] ;
+terminator Entry ";" ;

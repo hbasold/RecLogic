@@ -1,0 +1,62 @@
+
+name:                RecLogic
+version:             0.1.0.0
+synopsis:            Initial project template from stack
+description:         Please see README.md
+homepage:            https://github.com/githubuser/Logic#readme
+license:             BSD3
+license-file:        LICENSE
+author:              Henning Basold
+maintainer:          henning@basold.eu
+copyright:           2016 Henning Basold
+category:            Web
+build-type:          Simple
+extra-source-files:  src/Parser/LexSimpleCalc.x src/Parser/ParSimpleCalc.y
+cabal-version:       >=1.10
+
+library
+  hs-source-dirs:      src
+  exposed-modules:     Parser.ParSimpleCalc
+                       Parser.LexSimpleCalc
+                       Parser.AbsSimpleCalc
+                       Parser.PrintSimpleCalc
+                       Parser.ErrM
+                       TypeChecker.ProgramChecker
+                       TypeChecker.TyErr
+                       TypeChecker.CheckMonad
+  other-modules:       TypeChecker.Substitution
+                       TypeChecker.Reductions
+                       TypeChecker.TypedConstr
+                       TypeChecker.TypeChecker
+                       TypeChecker.TypeCheck
+                       TypeChecker.ProofChecker
+  build-depends:       base >= 4.9 && < 5
+                     , array
+                     , containers
+                     , mtl
+                     , transformers
+                     , syb
+  default-language:    Haskell2010
+
+executable Logic-exe
+  hs-source-dirs:      app
+  main-is:             Main.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  build-depends:       base
+                     , Logic
+                     , mtl
+  default-language:    Haskell2010
+
+test-suite Logic-test
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  main-is:             Spec.hs
+  build-depends:       base
+                     , Logic
+                     , mtl
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  default-language:    Haskell2010
+
+source-repository head
+  type:     git
+  location: https://github.com/hbasold/RecLogic
