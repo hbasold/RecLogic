@@ -75,9 +75,10 @@ instance forall a. Data a => Eq (Term a) where
   (==) = eq'
     where
       eq' :: Term a -> Term a -> Bool
-      eq' x y =
-        (toConstr x == toConstr y)
-        && and (gzipWithQ (True `mkQ2` eq') x y)
+      eq' (Var _ x) (Var _ y) = x == y
+      eq' s t =
+        (toConstr s == toConstr t)
+        && and (gzipWithQ (True `mkQ2` eq') s t)
 
 type TTerm = Term Type
 

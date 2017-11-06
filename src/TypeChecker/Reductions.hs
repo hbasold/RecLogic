@@ -255,6 +255,7 @@ convertibleTo s t = do
   -- issueWarning $ GenericWarning $
   --   "Comparing normal forms " ++ show s' ++ " and " ++ show t'
   --   ++ " of " ++ printTree s ++ " and " ++ printTree t
+  --   ++ " -> " ++ show (s' == t')
   -- checkTyped s'
   -- checkTyped t'
   return $ s' == t'

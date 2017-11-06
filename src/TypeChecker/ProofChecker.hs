@@ -644,7 +644,7 @@ checkProof p1 f = case p1 of
       conv <- s' `convertibleTo` t'
       when (not conv)
         (throwError $ ProofCheckError p1 $
-         printTree s ++ " not convertible to " ++ printTree t)
+         printTree s' ++ " not convertible to " ++ printTree t')
       when (s /= (forgetType s'))
         (throwError $ ProofCheckError p1 $
          printTree s ++ " does not match expected " ++ printTree s')
