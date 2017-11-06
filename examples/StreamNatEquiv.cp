@@ -198,5 +198,5 @@ thm nat-aux-equiv : forall n:Nat. nat1-aux n ~ nat2-aux (inj n) =
 thm nat1-nat2-equiv : nat1 ~ nat2 =
   trans (trans (refl nat1 (nat1-aux 0))
                ((inst nat-aux-equiv) @ 0))
-        (refl (nat2-aux (inj 2)) nat2)
+        (refl (nat2-aux (inj 0)) nat2)
 ;

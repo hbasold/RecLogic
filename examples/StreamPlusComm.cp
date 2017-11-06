@@ -61,9 +61,15 @@ thm later-distr-conj [P,Q] : #P & #Q -> #(P & Q) =
          <*> (lplq.&snd)
 ;
 
-thm later-dist-forall-Nat [P(x : Nat)]
-  : #(forall x:Nat.P(x)) -> forall y:Nat. #P(y)
-  = \p. \\y. (nec (\q. q @ y)) <*> p
+-- FIXME:
+-- We should be able to declare this as
+-- thm later-dist-forall-Nat [P(x : Nat)]
+--   : #(forall x:Nat.P(x)) -> forall y:Nat. #P(y)
+-- and instantiate it with other variable names.
+-- This, however, requires unification of formulas.
+thm later-dist-forall-Nat [P(n : Nat)]
+  : #(forall n:Nat.P(n)) -> forall m:Nat. #P(m)
+  = \p. \\m. (nec (\q. q @ m)) <*> p
 ;
 
 thm later-dist-forall-StrN [P(x : StrN)]
@@ -79,7 +85,7 @@ thm later-distr-pair : forall x:Nat*StrN. forall y:Nat*StrN.
 
 thm trans2-Nat : forall x:Nat. forall x1:Nat. forall y:Nat. forall y1:Nat.
                  x ~ x1 -> y ~ y1 -> x1 ~ y1 -> x ~ y =
-  \\x. \\x1. \\y. \\y1. \p. \q. \r. trans p (trans q (sym r))
+  \\x. \\x1. \\y. \\y1. \p. \q. \r. trans p (trans r (sym q))
 ;
 
 thm later-trans-Nat : forall x:Nat. forall y:Nat. forall z:Nat.
@@ -124,8 +130,8 @@ thm suc-cong : forall n:Nat. forall m:Nat. #(n ~ m) -> suc n ~ suc m =
 thm plus-0-neutral-r : forall n:Nat. plus n 0 ~ n =
   \\n. (inst Nat-ind [plus n 0 ~ n])
        ((inst plus-0-neutral-l) @ 0)
-              (\\n. \p. trans ((inst plus-suc-distr-l) @ n @ 0)
-                                     (((inst suc-cong) @ (plus n 0) @ n) p)
+              (\\m. \p. trans ((inst plus-suc-distr-l) @ m @ 0)
+                                     (((inst suc-cong) @ (plus m 0) @ m) p)
               )
        @ n
 ;
@@ -134,13 +140,13 @@ thm plus-suc-distr-r
     : forall n:Nat. forall m:Nat. Eq plus n (suc m) ~ suc (plus n m)
     = \\n. \\m. (inst Nat-ind [plus n (suc m) ~ suc (plus n m)])
                 (refl (plus 0 (suc m)) (suc (plus 0 m)))
-                (\\n. \p.
+                (\\k. \p.
                   ((inst trans2-Nat)
-                         @ (plus (suc n) (suc m)) @ (suc (plus n (suc m)))
-                         @ (suc (plus (suc n) m)) @ (suc (suc (plus n m))))
-                         (refl (plus (suc n) (suc m)) (suc (plus n (suc m))))
-                         (refl (suc (plus (suc n) m)) (suc (suc (plus n m))))
-                         (((inst suc-cong) @ (plus n (suc m)) @ (suc (plus n m))) p)
+                         @ (plus (suc k) (suc m)) @ (suc (plus k (suc m)))
+                         @ (suc (plus (suc k) m)) @ (suc (suc (plus k m))))
+                         (refl (plus (suc k) (suc m)) (suc (plus k (suc m))))
+                         (refl (suc (plus (suc k) m)) (suc (suc (plus k m))))
+                         (((inst suc-cong) @ (plus k (suc m)) @ (suc (plus k m))) p)
                 )
                 @ n
 ;

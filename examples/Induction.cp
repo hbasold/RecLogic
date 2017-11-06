@@ -11,9 +11,9 @@ suc : Nat -> Nat
   = suc 0 ;
 
 
-thm later-dist-forall-Nat [P(x : Nat)]
-  : #(forall x:Nat.P(x)) -> forall y:Nat. #P(y)
-  = \p. \\y. (nec (\q. q @ y)) <*> p
+thm later-dist-forall-Nat [P(n : Nat)]
+  : #(forall n:Nat.P(n)) -> forall n:Nat. #P(n)
+  = \p. \\n. (nec (\q. q @ n)) <*> p
 ;
 
 thm Nat-ind [P(n : Nat)]
