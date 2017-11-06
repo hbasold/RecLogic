@@ -4,15 +4,12 @@
 
 type Nat = lfp X . Unit + X ;
 -- Non-empty, finitely branching, Nat-labelled, potentially infinite trees
-type Tr = gfp X . lfp Y . Nat * (Unit + X * Y) ;
+type Tr = gfp X . Nat * (lfp Y . (Unit + X * Y)) ;
 -- Branching-type of Tr
-type Br = lfp Y . Nat * (Unit + Tr * Y) ;
-
-root-aux : Nat * (Unit + Tr * Nat) -> Nat
-         = \x. x.fst ;
+type Br = (lfp Y . (Unit + Tr * Y)) ;
 
 root : Tr -> Nat
-     = \x. rec root-aux (x.out) ;
+     = \x. x.out.fst ;
 
 -- Non-empty, finitely branching, Nat-labelled, potentially infinite trees
 type Tr2 = gfp X . lfp Y . Unit + (Nat * X * Y) ;
