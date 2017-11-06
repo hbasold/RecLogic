@@ -55,6 +55,13 @@ readerPr f = ProofCheckM (reader f)
 localPr :: (ProofCheckEnv -> ProofCheckEnv) -> ProofCheckM a -> ProofCheckM a
 localPr f (ProofCheckM m) = ProofCheckM (local f m)
 
+localVar :: Identifier -> Type -> Proof () -> ProofCheckM a -> ProofCheckM a
+localVar x a f m = do
+  asks (Map.member x) >>= \r ->
+    when r (throwError $ ProofCheckError f
+             $ "Variable " ++ printTree x ++ " already declared.")
+  local (Map.alter (\_ -> Just a) x) m
+
 askProofEnv :: ProofCheckM ProofEnv
 askProofEnv = ProofCheckM $ reader proofEnv
 
@@ -619,11 +626,23 @@ checkProof p1 f = case p1 of
               checkProof p f
   PrAllIntro x p -> case f of
     Forall y a g -> do
-      when (x /= y) (throwError $ ProofCheckError p1 $
-                     "Change of variable names not supported")
+      -- FIXME: We could introduce a fresh variable if x has already been
+      -- declared, thereby allowing shadowing in proofs.
+      -- x' <- asks (getDeclPosition x) >>=
+      --       \xDeclared -> case xDeclared of
+      --         Nothing -> return x
+      --         Just xOld -> (issueWarning $ Shadowing x xOld) >>
+      --                      fresh x
+      g' <- if x /= y
+            then substTerm (Map.singleton y (Var a x)) g
+            else return g
+      -- issueWarning $ GenericWarning $ printTree p
+      -- issueWarning $ GenericWarning $ printTree g'
+      -- when (x /= y) (throwError $ ProofCheckError p1 $
+      --                "Change of variable names not supported")
       --       varExists <- isVar identifier
       --       maybe (return ()) (\y' -> tell [Shadowing identifier y']) varExists
-      local (Map.alter (\_ -> Just a) x) $ checkProof p g
+      localVar x a p1 $ checkProof p g'
     _ -> throwError $ ProofCheckError p1 $
          printTree f ++ " is not a forall formula"
   PrAllElim p t -> do
@@ -746,8 +765,8 @@ checkProof p1 f = case p1 of
        h1 <- substTerm (Map.singleton x (Inl a $ Var b1 y1)) f
        h2 <- substTerm (Map.singleton x (Inr a $ Var b2 y2)) f
        -- FIXME: We need to replace x in the assumptions and and remove it!
-       local (Map.alter (\_ -> Just b1) y1) $ checkProof p1 h1
-       local (Map.alter (\_ -> Just b2) y2) $ checkProof p2 h2
+       localVar y1 b1 p1 $ checkProof p1 h1
+       localVar y2 b2 p2 $ checkProof p2 h2
      _ -> throwError $ ProofCheckError p1 $
           "Cannot refine variable" ++ show x ++ " to (inl " ++  show y1 ++ ")"
           ++ " because " ++ printTree a ++ " is not an sum type"

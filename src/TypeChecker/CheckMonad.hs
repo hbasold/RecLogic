@@ -56,6 +56,16 @@ getDeclType x = do
    Just (a,t) -> return a
    Nothing -> throwError $ Bad $ show x ++ " not declared."
 
+-- | If the variable x is in the environment e, then
+-- getDeclPosition x e returns an identifier with the position, where
+-- x has been delared.
+-- Unfortunately, this map requires two lookups, thus is rather inefficient
+-- for now.
+getDeclPosition :: Identifier -> Env -> Maybe Identifier
+getDeclPosition x e = case Map.lookupIndex x e of
+  Nothing -> Nothing
+  Just i -> Just $ fst $ elemAt i e
+
 issueWarning :: (MonadWriter TyWarnings m) => TyWarning -> m ()
 issueWarning w = tell [w]
 
